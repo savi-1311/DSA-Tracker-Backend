@@ -1,6 +1,6 @@
 # DSA-Tracker-Backend 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![MIT Liscence](https://img.shields.io/badge/MIT-Liscence-yellow)](https://github.com/savi-1311/Rate-It-Backend/blob/master/LICENSE)
+[![MIT Liscence](https://img.shields.io/badge/MIT-Liscence-yellow)](https://github.com/savi-1311/DSA-Tracker-Backend/blob/master/LICENSE)
 <!--  -->
 
 
