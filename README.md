@@ -26,11 +26,6 @@ Logs out the current session.
 
 <br>
 
-* > __/browse/remove?idu=\<email\>&idm=\<movieID\>__
-
-Deletes the tuple which has the passed email and movieID.
-
-<br>
 
 #### POST Requests
 
