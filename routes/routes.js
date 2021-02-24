@@ -24,6 +24,7 @@ transporter.verify(function(error, success) {
 });
 
 
+// Authentication Begins
 
 var otp;
 
@@ -130,7 +131,7 @@ app.post('/login', async (req,res) => {
 				if(result)
 				{
 					req.session.user = user[0];
-					res.status(200).send("Successfully logged in");
+					res.status(200).json(req.session.user);
 				}
 				else
 				{
@@ -161,5 +162,58 @@ app.get("/logout", (req, res) => {
 		res.status(401).send("You are not logged in");
 	}
 });
+
+// Authentication Ends Here
+
+// User-related Requests
+
+app.patch("/edit", async (req, res) => {
+	if (req.session.user) {
+		var user = await userModel.findOneAndUpdate({'email':req.session.user.email},{ "$set": { "name": req.body.name, "github": req.body.github, "codeforces": req.body.codeforces}},{new: true});
+		try
+		{
+			req.session.user = user;
+			res.status(200).json(req.session.user);
+		}
+		catch(err)
+		{
+			res.status(500).send("Error occured while Updating Database");
+		}
+	}
+	else 
+	{
+		res.status(401).send("Please Log In to continue");
+	}
+});
+
+
+app.get("/dashboard", async (req, res) => {
+	if (req.session.user) {
+		res.status(200).json(req.session.user);
+	}
+	else 
+	{
+		res.status(401).send("Please Log In to continue");
+	}
+});
+
+
+// PUBLIC API Endpoints
+
+app.get("/profile", async (req, res) => {
+
+	var user = await userModel.findOne({'_id':req.query.id});
+		try
+		{
+			res.status(200).json(user);
+		}
+		catch(err)
+		{
+			res.status(500).send("Error occured while Updating Database");
+		}
+});
+
+
+
 
 module.exports = app
