@@ -3,6 +3,9 @@ const userModel = require('../models/usermodel.js');
 const app = express();
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
+const mongoose = require('mongoose');
+
+//setting up the mailer
 
 
 const transporter = nodemailer.createTransport({
@@ -21,6 +24,26 @@ transporter.verify(function(error, success) {
 	} else {
 		console.log('Server is ready to take our messages');
 	}
+});
+
+// question model, since we will use them multiple times for different collections
+
+const questionSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  link: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  completed: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
 });
 
 
@@ -68,7 +91,7 @@ app.post('/validate', async (req, res) => {
 		catch (err) 
 		{
 			console.log("Error with database");
-			res.status(500).send(err);
+			res.status(500).send(err); 
 		}
 	}
 
@@ -96,7 +119,30 @@ app.post('/signup', async (req, res) => {
 				"github": req.body.github
 			};
 
+
+			const datadef = {
+				"name": "Hello World",
+				"link": "https://www.hackerrank.com/challenges/30-hello-world/problem",
+				"completed": false
+			};
+
 			const new_user = new userModel(data);
+
+			var uniquequestion = "question"+req.body.email;
+
+			var questionuser = mongoose.model(uniquequestion, questionSchema);
+
+			var defquestion = new questionuser(datadef);
+
+			try{
+				await defquestion.save();
+				console.log("Default Question has been saved");
+			}
+			catch (err)
+			{
+				console.log(err);
+				console.log("Default Question cannot be saved");
+			}
 
 			try {
 				await new_user.save();
@@ -196,6 +242,122 @@ app.get("/dashboard", async (req, res) => {
 		res.status(401).send("Please Log In to continue");
 	}
 });
+
+
+app.get("/question", async (req, res) => {
+	if (req.session.user) {
+
+		var uniquequestion = "question"+req.session.user.email;
+
+		var questionuser = mongoose.model(uniquequestion, questionSchema);
+
+		const list = await questionuser.find({});
+		try 
+		{
+    	res.status(200).json(list);
+  		} 
+  		catch (err) 
+  		{
+  			console.log(err);
+    		res.status(500).send("Could not connect to the database");
+  		}
+	}
+	else 
+	{
+		res.status(401).send("Please Log In to continue");
+	}
+});
+
+
+
+app.post("/question", async (req, res) => {
+	if (req.session.user) {
+
+		var uniquequestion = "question"+req.session.user.email;
+
+		var questionuser = mongoose.model(uniquequestion, questionSchema);
+
+		const data = {
+				"name": req.body.name,
+				"link": req.body.link,
+				"completed": false
+			};
+
+	    var question = new questionuser(data);
+
+			try{
+				await question.save();
+				res.status(200).json(question);
+			}
+			catch (err)
+			{
+				console.log(err);
+				res.status(500).json("Question cannot be saved");
+			}
+
+	}
+	else 
+	{
+		res.status(401).send("Please Log In to continue");
+	}
+});
+
+
+
+
+app.patch("/question", async (req, res) => {
+	if (req.session.user) {
+
+		var uniquequestion = "question"+req.session.user.email;
+
+		var questionuser = mongoose.model(uniquequestion, questionSchema);
+
+		var question = await questionuser.findOneAndUpdate({'_id':req.body._id},{ "$set": { "name": req.body.name, "link": req.body.link}},{new: true});
+
+			try{
+				res.status(200).json(question);
+			}
+			catch (err)
+			{
+				console.log(err);
+				res.status(500).json("Question cannot be edited");
+			}
+
+	}
+	else 
+	{
+		res.status(401).send("Please Log In to continue");
+	}
+});
+
+
+
+app.patch("/question-edit", async (req, res) => {
+	if (req.session.user) {
+
+		var uniquequestion = "question"+req.session.user.email;
+
+		var questionuser = mongoose.model(uniquequestion, questionSchema);
+
+		var question = await questionuser.findOneAndUpdate({'_id':req.body._id},{ "$set": { "completed": req.body.status}},{new: true});
+
+			try{
+				res.status(200).json(question);
+			}
+			catch (err)
+			{
+				console.log(err);
+				res.status(500).json("Question Status cannot be edited");
+			}
+
+	}
+	else 
+	{
+		res.status(401).send("Please Log In to continue");
+	}
+});
+
+
 
 
 // PUBLIC API Endpoints
