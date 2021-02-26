@@ -52,6 +52,13 @@ Request Body (Form) {email,password}
 The user is logged in if the credentials are true.
 <br>
 
+* > __/question__
+
+Request Body (Form) {name,link} 
+
+The question is added by the logged in user.
+<br>
+
 #### PATCH Requests
 
 * > __/edit__
@@ -59,6 +66,22 @@ The user is logged in if the credentials are true.
 Request Body (Form) {name,codeforces,github} 
 
 The profile is edited for the logged in user.
+
+<br>
+
+* > __/question__
+
+Request Body (Form) {name,link,_id} 
+
+The question with the provided _id is edited.
+
+<br>
+
+* > __/question-edit__
+
+Request Body (Form) {_id,status} 
+
+The question's status with the provided _id is changed (solved,unsolved).
 
 <br>
 
