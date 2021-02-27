@@ -24,6 +24,10 @@ Returns the profile of the specified userid.
 
 Logs out the current session.
 
+* > __/question__
+
+Resturns all the question of the current user.
+
 <br>
 
 
