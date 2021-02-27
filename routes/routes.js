@@ -29,21 +29,21 @@ transporter.verify(function(error, success) {
 // question model, since we will use them multiple times for different collections
 
 const questionSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  link: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  completed: {
-    type: Boolean,
-    required: true,
-    default: false
-  },
+	name: {
+		type: String,
+		required: true,
+		trim: true
+	},
+	link: {
+		type: String,
+		required: true,
+		trim: true
+	},
+	completed: {
+		type: Boolean,
+		required: true,
+		default: false
+	},
 });
 
 
@@ -60,18 +60,31 @@ app.post('/validate', async (req, res) => {
 	}
 	else
 	{
-		const {name,email,password} = req.body;
+		const {name,email,password,github,codeforces} = req.body;
 		const user = await userModel.find({'email':req.body.email});
 		try {
 			if(user.length == 0)
 			{
-				otp = Math.floor((Math.random() * 10000) + 1);
+				var otp = Math.floor((Math.random() * 10000) + 1);
 				const mailOptions = {
 					from: process.env.MAILER_ID,
 					to: email,
 					subject: 'Welcome to Coding Buddy (Testing)' + name,
 					text: 'Welcome to Coding Buddy! Your Code to Complete the Registration Process is - '+otp
 				};
+
+				var pwdHash = bcrypt.hashSync(password, 10);
+				var otpHash = bcrypt.hashSync(String(otp), 10);
+				const tempuser = 
+				{
+					"name": name,
+					"email": email,
+					"password": pwdHash,
+					"github": github,
+					"codeforces": codeforces,
+					"otp": otpHash
+				}
+				req.session.temp = tempuser;
 
 				transporter.sendMail(mailOptions, function(err, data) { 
 					if(err) { 
@@ -91,6 +104,7 @@ app.post('/validate', async (req, res) => {
 		catch (err) 
 		{
 			console.log("Error with database");
+			console.log(err);
 			res.status(500).send(err); 
 		}
 	}
@@ -107,16 +121,16 @@ app.post('/signup', async (req, res) => {
 	}
 	else
 	{
-		const {name,email,password,code,codeforces,github} = req.body;
-		if(code==otp)
+		const {name,email,password,otp,codeforces,github} = req.session.temp;
+		const code = req.body.code;
+		if(bcrypt.compareSync(code, req.session.temp.otp))
 		{
-			var pwdHash = bcrypt.hashSync(password, 10);
 			const data = {
-				"name": req.body.name,
-				"email": req.body.email,
-				"password": pwdHash,
-				"codeforces": req.body.codeforces,
-				"github": req.body.github
+				"name": req.session.temp.name,
+				"email": req.session.temp.email,
+				"password": req.session.temp.password,
+				"codeforces": req.session.temp.codeforces,
+				"github": req.session.temp.github
 			};
 
 
@@ -128,7 +142,7 @@ app.post('/signup', async (req, res) => {
 
 			const new_user = new userModel(data);
 
-			var uniquequestion = "question"+req.body.email;
+			var uniquequestion = "question"+req.session.temp.email;
 
 			var questionuser = mongoose.model(uniquequestion, questionSchema);
 
@@ -254,13 +268,13 @@ app.get("/question", async (req, res) => {
 		const list = await questionuser.find({});
 		try 
 		{
-    	res.status(200).json(list);
-  		} 
-  		catch (err) 
-  		{
-  			console.log(err);
-    		res.status(500).send("Could not connect to the database");
-  		}
+			res.status(200).json(list);
+		} 
+		catch (err) 
+		{
+			console.log(err);
+			res.status(500).send("Could not connect to the database");
+		}
 	}
 	else 
 	{
@@ -278,22 +292,22 @@ app.post("/question", async (req, res) => {
 		var questionuser = mongoose.model(uniquequestion, questionSchema);
 
 		const data = {
-				"name": req.body.name,
-				"link": req.body.link,
-				"completed": false
-			};
+			"name": req.body.name,
+			"link": req.body.link,
+			"completed": false
+		};
 
-	    var question = new questionuser(data);
+		var question = new questionuser(data);
 
-			try{
-				await question.save();
-				res.status(200).json(question);
-			}
-			catch (err)
-			{
-				console.log(err);
-				res.status(500).json("Question cannot be saved");
-			}
+		try{
+			await question.save();
+			res.status(200).json(question);
+		}
+		catch (err)
+		{
+			console.log(err);
+			res.status(500).json("Question cannot be saved");
+		}
 
 	}
 	else 
@@ -314,14 +328,14 @@ app.patch("/question", async (req, res) => {
 
 		var question = await questionuser.findOneAndUpdate({'_id':req.body._id},{ "$set": { "name": req.body.name, "link": req.body.link}},{new: true});
 
-			try{
-				res.status(200).json(question);
-			}
-			catch (err)
-			{
-				console.log(err);
-				res.status(500).json("Question cannot be edited");
-			}
+		try{
+			res.status(200).json(question);
+		}
+		catch (err)
+		{
+			console.log(err);
+			res.status(500).json("Question cannot be edited");
+		}
 
 	}
 	else 
@@ -341,14 +355,14 @@ app.patch("/question-edit", async (req, res) => {
 
 		var question = await questionuser.findOneAndUpdate({'_id':req.body._id},{ "$set": { "completed": req.body.status}},{new: true});
 
-			try{
-				res.status(200).json(question);
-			}
-			catch (err)
-			{
-				console.log(err);
-				res.status(500).json("Question Status cannot be edited");
-			}
+		try{
+			res.status(200).json(question);
+		}
+		catch (err)
+		{
+			console.log(err);
+			res.status(500).json("Question Status cannot be edited");
+		}
 
 	}
 	else 
@@ -365,14 +379,14 @@ app.patch("/question-edit", async (req, res) => {
 app.get("/profile", async (req, res) => {
 
 	var user = await userModel.findOne({'_id':req.query.id});
-		try
-		{
-			res.status(200).json(user);
-		}
-		catch(err)
-		{
-			res.status(500).send("Error occured while Updating Database");
-		}
+	try
+	{
+		res.status(200).json(user);
+	}
+	catch(err)
+	{
+		res.status(500).send("Error occured while Updating Database");
+	}
 });
 
 
