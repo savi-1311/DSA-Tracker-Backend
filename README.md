@@ -24,6 +24,10 @@ Returns the profile of the specified userid.
 
 Logs out the current session.
 
+* > __/question__
+
+Resturns all the question of the current user.
+
 <br>
 
 
@@ -39,7 +43,7 @@ OTP is sent to the email and the registeration process initiates.
 
 * > __/signup__
 
-Request Body (Form) {email,password,name,codeforces,github,code} 
+Request Body (Form) {code} 
 
 The OTP(code) is verified and the user is registered to the website.
 
