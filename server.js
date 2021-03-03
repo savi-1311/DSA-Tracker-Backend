@@ -5,6 +5,7 @@ const session = require('express-session');
 const mongoose = require('mongoose');
 const nodemailer = require("nodemailer");
 require('dotenv').config();
+const cors = require('cors');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -20,10 +21,18 @@ mongoose.connection.on('error',(err)=>{
     console.log("err connecting",err)
 })
 
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  })
+);
+
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: true,
+  HttpOnly: true,
   cookie: { maxAge: 3600000 }
 }));
 

@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 
 //setting up the mailer
 
+let loggeduser;
 
 const transporter = nodemailer.createTransport({
 	service: 'gmail',
@@ -248,12 +249,13 @@ app.patch("/edit", async (req, res) => {
 
 
 app.get("/dashboard", async (req, res) => {
+	console.log(req.session.user);
 	if (req.session.user) {
 		res.status(200).json(req.session.user);
 	}
 	else 
 	{
-		res.status(401).send("Please Log In to continue");
+		res.status(401).send("Please log in to continue");
 	}
 });
 
